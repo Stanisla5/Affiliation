@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Formulaire avec redirection et tableau</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    form {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+    }
+    input {
+      margin-bottom: 15px;
+      padding: 8px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    button {
+      padding: 10px 15px;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f4f4f4;
+    }
+  </style>
+</head>
+<body>
+  <h1>Formulaire et Redirection</h1>
+  <form id="userForm">
+    <label for="name">Nom :</label>
+    <input type="text" id="name" name="name" placeholder="Entrez votre nom" required>
+
+    <label for="email">Email :</label>
+    <input type="email" id="email" name="email" placeholder="Entrez votre email" required>
+
+    <button type="submit">Accéder au lien</button>
+  </form>
+
+  <h2>Liste des utilisateurs</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Nom</th>
+        <th>Email</th>
+        <th>Lien d'affiliation</th>
+      </tr>
+    </thead>
+    <tbody id="userTableBody">
+      <!-- Les lignes seront ajoutées ici dynamiquement -->
+    </tbody>
+  </table>
+
+  <script>
+    const form = document.getElementById('userForm');
+    const userTableBody = document.getElementById('userTableBody');
+    const baseLink = "https://sites.google.com/view/appssolutionspro/nos-applications-premium?authuser=0";
+    const googleSheetScriptUrl = "https://script.google.com/macros/s/AKfycbwwL7ccmrbMIcXWklqqP7viangEQWPdeUDfWCQEJ1gF2DsFtlNGUJTD7LpYdlr0jorg2Q/exec"; // Remplacez par l'URL de votre script Google Apps
+
+    form.addEventListener('submit', function (event) {
+      event.preventDefault(); // Empêche le rechargement de la page
+
+      // Récupère les valeurs du formulaire
+      const name = document.getElementById('name').value;
+      const email = document.getElementById('email').value;
+      const uniqueId = generateUniqueId();
+      const affiliateLink = `${baseLink}&affiliate=${uniqueId}`;
+
+      // Ajoute les données dans le tableau
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${name}</td>
+        <td>${email}</td>
+        <td><a href="${affiliateLink}" target="_blank">${affiliateLink}</a></td>
+      `;
+      userTableBody.appendChild(row);
+
+      // Envoie les données à Google Sheets
+      sendDataToGoogleSheet(name, email, affiliateLink);
+
+      // Redirige l'utilisateur vers le lien
+      window.open(affiliateLink, '_blank');
+
+      // Réinitialise le formulaire
+      form.reset();
+    });
+
+    function generateUniqueId() {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    }
+
+    function sendDataToGoogleSheet(name, email, affiliateLink) {
+      fetch(googleSheetScriptUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name, email, affiliateLink })
+      })
+      .then(response => response.json())
+      .then(data => console.log('Success:', data))
+      .catch((error) => console.error('Error:', error));
+    }
+  </script>
+</body>
+</html>
